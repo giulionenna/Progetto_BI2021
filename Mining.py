@@ -16,5 +16,12 @@ for i in range(0, df.text.size):
     text_enc.append(txt)
 
 df['text_enc'] = text_enc
-df
 
+
+#ESPORTO I DATI NUOVI IN EXCEL PER ANALIZZARLI SU RAPID MINER
+#excel non supporta le date con le timezone quindi le ho dovute eliminare con il metodo datetime.tz_localize()
+df_enc = df[['favorite_count', 'source', 'text_enc', 'is_retweet', 'retweet_count', 'created_at']]
+df_enc.loc[:,'created_at_ntz']= df_enc.created_at.dt.tz_localize(None)
+df_enc.drop(columns='created_at')
+df_enc = df_enc.drop(columns='created_at')
+df_enc.to_excel('data_dec.xlsx')

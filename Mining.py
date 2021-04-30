@@ -17,6 +17,17 @@ for i in range(0, df.text.size):
 
 df['text_enc'] = text_enc
 
+#PROVO A FARE UN PO DI LANGUAGE DETECTION
+from langdetect import detect_langs
+#il metodo detect_langs fornisce un vettore di possibilità riguardo alla lingua del testo che sta analizzando
+#vado a vedere se ci sono nel dataset testi ambigui (quindi quelli per cui la dimensione del dict ritornato da detect_langs)
+#è maggiore di 1
+for twt in df.text_enc:
+    detection = detect_langs(twt)
+    if(len(detection)>1):
+        print(twt)
+        print(detection)
+
 
 #ESPORTO I DATI NUOVI IN EXCEL PER ANALIZZARLI SU RAPID MINER
 #excel non supporta le date con le timezone quindi le ho dovute eliminare con il metodo datetime.tz_localize()

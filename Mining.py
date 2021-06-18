@@ -10,6 +10,8 @@ df = pd.DataFrame(data)
 #all interno della colonna text è presente una rappresentazione di un bytes sotto forma di stringa.
 #questa può essere valutata attraverso la funzione ast.literal_eval(string) e quindi decodificata
 #secondo la codifica appropriata tramite il metodo decode
+
+
 text_enc = []
 for i in range(0, df.text.size):
     txt= ast.literal_eval(df.text[i]).decode('utf-8')
@@ -23,7 +25,6 @@ df['text_enc'] = text_enc
 
 from langdetect import detect_langs
 import re
-
 #il metodo detect_langs fornisce un vettore di possibilità riguardo alla lingua del testo che sta analizzando
 #vado a vedere se ci sono nel dataset testi ambigui (quindi quelli per cui la dimensione del dict ritornato da detect_langs)
 #è maggiore di 1
@@ -64,8 +65,8 @@ for twt in df.text_enc:
 
 
 
-df['langdetect']=lang_detect
-df['unsure_wrong_detection'] = unsure_wrong
+df['langdetect']=lang_detect_before
+df['unsure_wrong_detection'] = unsure_wrong_before
 
 unsure_wrong_before_sum = df['unsure_wrong_detection'].sum()
 unsure_wrong_before_sum
@@ -147,7 +148,7 @@ df['lang_detect_final'] = lang_detect_final
 
 #ESPORTO I DATI NUOVI IN EXCEL PER ANALIZZARLI SU RAPID MINER
 #excel non supporta le date con le timezone quindi le ho dovute eliminare con il metodo datetime.tz_localize()
-df_enc = df[['favorite_count', 'source', 'text_enc', 'is_retweet', 'retweet_count', 'created_at']]
+df_enc = df[['favorite_count', 'source', 'text_enc', 'is_retweet', 'retweet_count', 'created_at', 'langdetect', 'unsure_wrong_detection']]
 df_enc.loc[:,'created_at_ntz']= df_enc.created_at.dt.tz_localize(None)
 df_enc.drop(columns='created_at')
 df_enc = df_enc.drop(columns='created_at')

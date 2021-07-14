@@ -226,7 +226,7 @@ data = pd.read_excel('C:/Users/gsppp/OneDrive/Poli/Quarto Anno/Business Intellig
 df_en=pd.DataFrame(data)
 
 # Creo i dataframe che userò per le analisi
-TexasDF = df_en.loc[df_en['label_kmeans_01'] == 4].drop(['label_kmeans_05','label_kmeans_10','label_kmeans_PCA'],axis=1)
+TexasDF  = df_en.loc[df_en['label_kmeans_01'] == 4].drop(['label_kmeans_05','label_kmeans_10','label_kmeans_PCA'],axis=1)
 PharmaDF = df_en.loc[df_en['label_kmeans_01'] == 2].drop(['label_kmeans_05','label_kmeans_10','label_kmeans_PCA'],axis=1)
 SchoolDF = df_en.loc[df_en['label_kmeans_01'] == 14].drop(['label_kmeans_05','label_kmeans_10','label_kmeans_PCA'],axis=1)
 
@@ -550,3 +550,154 @@ ax.set_ylabel('Frequenza assoluta')
 ax.set_title('Sentiment analysis del cluster relativo alle scuole\n rispetto alle ore del giorno')
 ax.legend()
 plt.show()
+
+# SENTIMENT ANALYSIS RELATIVA AI LINK
+import pandas as pd
+import numpy as np
+import nltk as nltk
+import matplotlib.pyplot as plt
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+# Questa funzione mi serve per etichettare i vari tweet
+def labeler(val):
+    if val > 0.05:
+        return "positive"
+    elif val < -0.05:
+        return "negative"
+    else:
+        return "neutral"
+
+def linkCounter(series):
+    cnt = np.zeros(6,dtype=int)
+    for line in series:
+        if int(line) <= 5:
+            cnt[int(line)] = cnt[int(line)] + 1
+    return cnt
+
+sia = SentimentIntensityAnalyzer()
+
+data = pd.read_excel('C:/Users/gsppp/OneDrive/Poli/Quarto Anno/Business Intelligence per Big Data/Progetto/ProgettoBIClusterAnalysis/data_dec.xlsx')
+linkDF=pd.DataFrame(data)
+
+linkDF['positive'] = [sia.polarity_scores(str(tweet))['pos'] for tweet in linkDF.text_clean]
+linkDF['negative'] = [sia.polarity_scores(str(tweet))['neg'] for tweet in linkDF.text_clean]
+linkDF['neutral'] = [sia.polarity_scores(str(tweet))['neu'] for tweet in linkDF.text_clean]
+linkDF['compound'] = [sia.polarity_scores(str(tweet))['compound'] for tweet in linkDF.text_clean]
+linkDF['overall score'] = [labeler(val) for val in linkDF.compound]
+
+
+# Per semplicità consideriamo solo i tweet contentnenti al più 5 link. I tweet con più di 5 link sono 3 su un totale di oltre 4000 tweet e perciò sono
+# trascurabili.
+
+linkPosDF = linkDF.loc[linkDF['overall score']=='positive'].sort_values(by='links')['links']
+linkNegDF = linkDF.loc[linkDF['overall score']=='negative'].sort_values(by='links')['links']
+
+cntPosLinks = linkCounter(linkPosDF)
+cntNegLinks = linkCounter(linkNegDF)
+
+width = 0.35       
+fig, ax = plt.subplots()
+labels = ['00','01','02','03','04','05']
+ax.bar(labels, cntPosLinks, width, label='Pos', color = '#2F329F', alpha = 0.5)
+ax.bar(labels, cntNegLinks, width, label='Neg', color = '#2F7998', alpha = 0.5, bottom=cntPosLinks)
+ax.set_ylabel('Numero di link nel tweet')
+ax.set_ylabel('Frequenza assoluta')
+ax.set_title('Sentiment analysis rispetto\n al numero di link nel tweet')
+ax.legend()
+plt.show()
+
+# SENTIMENT ANALYSIS RELATIVA AI "MI PIACE"
+import pandas as pd
+import numpy as np
+import nltk as nltk
+import matplotlib.pyplot as plt
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+def labeler(val):
+    if val > 0.05:
+        return "positive"
+    elif val < -0.05:
+        return "negative"
+    else:
+        return "neutral"
+
+def favCounter(series):
+    cnt = np.zeros(max(series)-min(series)+1,dtype=int)
+    for num in series:
+        cnt[num] = cnt[num] + 1
+    return cnt
+
+def shrinker(series):
+    histCnt = np.zeros(11,dtype=int)
+    i = 1
+    for num in series:
+        if i <= 10:
+            histCnt[0] = histCnt[0] + num
+        elif i > 10 and i <= 20:
+            histCnt[1] = histCnt[1] + num
+        elif i > 20 and i <= 50:
+            histCnt[2] = histCnt[2] + num
+        elif i > 50 and i <= 100:
+            histCnt[3] = histCnt[3] + num
+        elif i > 100 and i <= 200:
+            histCnt[4] = histCnt[4] + num
+        elif i > 200 and i <= 500:
+            histCnt[5] = histCnt[5] + num
+        elif i > 500 and i <= 1000:
+            histCnt[6] = histCnt[6] + num
+        elif i > 1000 and i <= 2000:
+            histCnt[7] = histCnt[7] + num
+        elif i > 2000 and i <= 5000:
+            histCnt[8] = histCnt[8] + num
+        elif i > 5000 and i <= 10000:
+            histCnt[9] = histCnt[9] + num
+        else:
+            histCnt[10] = histCnt[10] + num
+        i = i+1
+    return histCnt
+
+data = pd.read_excel('C:/Users/gsppp/OneDrive/Poli/Quarto Anno/Business Intelligence per Big Data/Progetto/ProgettoBIClusterAnalysis/data_dec.xlsx')
+fav_countDF=pd.DataFrame(data)
+
+pd.DataFrame(data).columns
+
+fav_countDF['positive'] = [sia.polarity_scores(str(tweet))['pos'] for tweet in fav_countDF.text_clean]
+fav_countDF['negative'] = [sia.polarity_scores(str(tweet))['neg'] for tweet in fav_countDF.text_clean]
+fav_countDF['neutral'] = [sia.polarity_scores(str(tweet))['neu'] for tweet in fav_countDF.text_clean]
+fav_countDF['compound'] = [sia.polarity_scores(str(tweet))['compound'] for tweet in fav_countDF.text_clean]
+fav_countDF['overall score'] = [labeler(val) for val in fav_countDF.compound]
+
+fav_countPosDF = linkDF.loc[linkDF['overall score']=='positive'].sort_values(by='favorite_count')['favorite_count']
+fav_countNegDF = linkDF.loc[linkDF['overall score']=='negative'].sort_values(by='favorite_count')['favorite_count']
+
+# Per chiarezza i conteggi dei "mi piaci" li riportiamo in scala di log2
+favPosCnt = shrinker(favCounter(fav_countPosDF))
+i = 0
+for num in favPosCnt:
+    if num != 0:
+        favPosCnt[i] = np.log2(favPosCnt[i])
+    i = i+1
+
+favNegCnt = shrinker(favCounter(fav_countNegDF))
+i = 0
+for num in favNegCnt:
+    if num != 0:
+        favNegCnt[i] = np.log2(favNegCnt[i])
+    i = i+1
+
+width = 0.35       
+fig, ax = plt.subplots()
+labels = ['0-10','10-20','20-50','50-100','100-200','200-500','500-1000','1000-2000','2000-5000','5000-10000','>10000',]
+ax.bar(labels, favPosCnt, width, label='Pos', color = '#2F329F', alpha = 0.5)
+ax.bar(labels, favNegCnt, width, label='Neg', color = '#2F7998', alpha = 0.5, bottom=favPosCnt)
+plt.xticks(rotation=45)
+ax.set_ylabel('Numero di link nel tweet')
+ax.set_ylabel('Frequenza assoluta in scala del logaritmo di 2')
+ax.set_title('Sentiment analysis rispetto\n al numero di "mi piace" del tweet')
+ax.legend()
+plt.show()
+
+
+
+
+

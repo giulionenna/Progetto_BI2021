@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import nltk as nltk
 
-data=pd.read_excel('C:/Users/gsppp/OneDrive/Poli/Quarto Anno/Business Intelligence per Big Data/Progetto/.csv/data_dec.xlsx')
+data=pd.read_excel('data_dec.xlsx')
 df=pd.DataFrame(data)
 
 df = df.drop(columns='langdetect')

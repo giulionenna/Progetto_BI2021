@@ -118,7 +118,8 @@ rules(df_en_school).to_excel('rules_school.xlsx')
 rules(df_en_texas, minsup=0.02).to_excel('rules_texas.xlsx')
 rules(df_en_vax, minsup=0.02).to_excel('rules_vax.xlsx')
 
-
+# %%
+rules(df_en, minsup=0.005).to_excel('Rules/rules_allData.xlsx')
 # %%
 M_school=M_school.reset_index(drop=True)
 M_school

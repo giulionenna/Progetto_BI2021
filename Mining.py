@@ -1,6 +1,7 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
+from os import name
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -59,13 +60,17 @@ def countHashtags(text):
 def countLinks(text):
     return len(re.findall('https?:\/\/\S+', text))
 
+def extractHashtags(text):
+    hashtag_array=re.findall('#\S+', text)
+    ht_string=' '.join(hashtag_array)
+    return ht_string
 
 df.text_enc=df.text_enc.astype('str')
 df['text_clean'] = df.text_enc.apply(cleanTxt)
 df['mentions'] = df.text_enc.apply(countMentions)
 df['hashtags'] = df.text_enc.apply(countHashtags)
 df['links'] = df.text_enc.apply(countLinks)
-
+df['hashtags_extracted']=df.text_enc.apply(extractHashtags)
 # %% [markdown]
 # ## Language Detection
 # il metodo `detect_langs` fornisce un vettore di possibilità riguardo la lingua del testo che sta analizzando. Vado a vedere se ci sono nel dataset testi ambigui (quindi quelli per cui la dimensione del `dict` ritornato da `detect_langs` è maggiore di 1).
@@ -148,7 +153,9 @@ df.unsure_wrong_detection.sum() #numero totale di tweet di cui non è stata iden
 # Excel non supporta le date con le timezone quindi le ho dovute eliminare con il metodo `datetime.tz_localize()`
 
 # %%
-df_enc = df[['favorite_count', 'source', 'text_enc', 'text_clean', 'is_retweet', 'retweet_count', 'created_at', 'langdetect' , 'unsure_wrong_detection', 'lang_detect_final', 'mentions', 'hashtags', 'links']]
+df_enc = df[['favorite_count', 'source', 'text_enc', 'text_clean', 'is_retweet', 
+            'retweet_count', 'created_at', 'langdetect' , 'unsure_wrong_detection', 'lang_detect_final',
+             'mentions', 'hashtags', 'links', 'hashtags_extracted']]
 df_enc.loc[:,'created_at_ntz']= df_enc.created_at.dt.tz_localize(None)
 
 df_enc = df_enc.drop(columns='created_at')
@@ -501,7 +508,7 @@ rules
 from wordcloud import WordCloud
 def cloud(df, label, ncluster, text_index='text_clean'):
 
-    frequent_words=['covid', 're']
+    frequent_words=['covid', 're', 'nan']
     
 
     df_0 = df.loc[df[label]==ncluster]
@@ -520,9 +527,29 @@ def cloud(df, label, ncluster, text_index='text_clean'):
     fig1.set_size_inches(18, 7)
     plt.imshow(wordcloud)
     
+def cloud_nocluster(df, text_index='text_clean'):
+
+    frequent_words=['covid', 're', 'nan']
     
 
+    df_0 = df
+    text = []
+    for twt in df_0[text_index]:
+        token_words = word_tokenize(twt) #tokenizzazione
+        token_filter_words_1 = [w for w in token_words if not w in stop_words]
+        token_filter_words_2 = [w for w in token_filter_words_1 if not w in frequent_words] #stopword filtering
+        for w in token_filter_words_2:
+            text.append(w)
+    
+    
+    txt=' '.join([word for word in text])
+    wordcloud = WordCloud(max_font_size=300, max_words=100, background_color="white", width=1920, height=1080).generate(txt)
+    fig1 = plt.figure(figsize=(6,6))
+    fig1.set_size_inches(18, 7)
+    plt.imshow(wordcloud) 
 
+cloud_nocluster(df)
+cloud_nocluster(df, text_index='hashtags_extracted')
 # %%
 k=15
 
@@ -555,6 +582,14 @@ df_en[df_en.label_kmeans_01==12].to_excel('df_en_cluster_texas.xlsx')
 df_en=pd.DataFrame(pd.read_excel('df_en_clustered.xlsx'))
 
 
+# %%
+hashtags_en =pd.Series(df.hashtags_extracted[df.lang_detect_final=='en'], name='hashtags_extracted').reset_index()
+df_en=pd.concat([df_en, hashtags_en], axis=1)
+df_en['hashtags_extracted']=df_en.hashtags_extracted.astype('str')
+# %%
+
+for i in range(k):
+    cloud(df_en, 'label_kmeans_01', i )
 # %%
 #genero una matrice one-hot encoded a partire dalla tf-idf completa
 M=tf_idf_en_00
